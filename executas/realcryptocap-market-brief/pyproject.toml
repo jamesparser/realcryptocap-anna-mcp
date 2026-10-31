@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tool-dev-realcryptocap-market-brief"
+version = "0.1.0"
+description = "Executa for the realcryptocap-market-brief Anna App"
+requires-python = ">=3.10"
+
+[project.scripts]
+"tool-dev-realcryptocap-market-brief" = "realcryptocap_market_brief_plugin:main"
+
+[tool.setuptools]
+py-modules = ["realcryptocap_market_brief_plugin"]

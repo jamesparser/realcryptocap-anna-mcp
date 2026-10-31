@@ -1,0 +1,6 @@
+{
+  "name": "RealCryptoCap Market Brief",
+  "tagline": "AI crypto market briefs on real market cap data, stablecoins excluded",
+  "description": "Generate a trader-ready crypto market brief in one click. RealCryptoCap Market Brief pulls live prices and 24h change from RealCryptoCap's real market cap data (stablecoins, wrapped/staked receipts and tokenized assets excluded), folds in the RealCryptoCap AI 24h analysis and current headlines, and composes a short brief with bias, key levels and what to watch. Pick your coins, hit Generate, get a brief. Built by the RealCryptoCap team behind the paid Pro/Ultra API, CLI and MCP (realcryptocap.com/api).",
+  "category": "finance"
+}

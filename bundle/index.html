@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RealCryptoCap Market Brief</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" type="module"></script>
+  </head>
+  <body>
+    <header class="hdr">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <h1>RealCryptoCap Market Brief</h1>
+          <p class="sub">Real market cap. Stablecoins and wrapped assets excluded.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel controls" aria-label="Brief controls">
+        <label class="lbl" for="coin-input">Coins</label>
+        <div class="chips" id="chips">
+          <button type="button" class="chip on" data-id="bitcoin">BTC</button>
+          <button type="button" class="chip on" data-id="ethereum">ETH</button>
+          <button type="button" class="chip on" data-id="solana">SOL</button>
+          <button type="button" class="chip" data-id="dogecoin">DOGE</button>
+          <button type="button" class="chip" data-id="chainlink">LINK</button>
+        </div>
+        <input
+          id="coin-input"
+          class="input"
+          type="text"
+          placeholder="or type CoinGecko ids, comma separated"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="generate" class="primary" type="button">Generate brief</button>
+        <p class="hint" id="quota"></p>
+      </section>
+
+      <section class="panel state" id="state" hidden>
+        <div class="spinner" id="spinner" hidden></div>
+        <p id="state-msg"></p>
+      </section>
+
+      <section class="panel brief" id="brief" hidden>
+        <div class="brief-head">
+          <h2>AI market brief</h2>
+          <span class="badge" id="badge">AI composed</span>
+        </div>
+        <p class="brief-text" id="brief-text"></p>
+
+        <h3 class="sect">Prices</h3>
+        <div class="rows" id="price-rows"></div>
+
+        <h3 class="sect">Headlines</h3>
+        <ul class="news" id="news"></ul>
+
+        <p class="foot">
+          Full data, native Top 500 and market briefs on
+          <a href="https://realcryptocap.com/api" target="_blank" rel="noopener">realcryptocap.com/api</a>.
+          API/CLI/MCP: Pro/Ultra only. API key required.
+        </p>
+      </section>
+
+      <section class="panel empty" id="empty">
+        <p>Pick coins, then generate a brief. Prices come from RealCryptoCap live data. The brief is written by AI from that data plus the RealCryptoCap 24h analysis and current headlines.</p>
+      </section>
+    </main>
+  </body>
+</html>

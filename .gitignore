@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.DS_Store
+.env
+.env.local
+dist/
+*.tgz
+.anna-app/

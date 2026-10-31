@@ -1,0 +1,24 @@
+RealCryptoCap MCP — License
+Copyright (c) 2026 Node0 Data Systems / RealCryptoCap
+All rights reserved.
+
+1. Software
+   The MCP server source in this repository (the "Software") is proprietary.
+   You may download and run the Software to connect to RealCryptoCap if you
+   have a valid paid Pro or Ultra subscription and API key.
+
+2. API and data
+   Access to RealCryptoCap market data (REST API, CLI, and MCP tools) is a
+   paid service. Pro is $25/month or $250/year. Ultra is $59/month or $588/year.
+   An API key (format rci_...) from https://realcryptocap.com/account is required.
+   There is no free tier for these data tools. Unauthenticated use is not permitted.
+
+3. Restrictions
+   You may not redistribute the Software as your own product, resell access to
+   the RealCryptoCap API, or remove this license notice.
+
+4. Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+Contact: contact@realcryptocap.com
+Website: https://realcryptocap.com
