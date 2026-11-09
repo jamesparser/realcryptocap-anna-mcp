@@ -24,9 +24,9 @@ The full RealCryptoCap product line is paid.
 
 - **API/CLI/MCP: Pro/Ultra only ($25/mo or $59/mo). API key required. Not free.**
 - Pro: $25/mo or $250/yr. Ultra: $59/mo or $588/yr.
-- Full product: real crypto market cap, native Top 500, coin lookup, market briefs, TraderSpy, Quant Agent and more.
+- Full product: real crypto market cap, native Top 500, coin lookup, market briefs, signals, derivatives and more.
 
-Get an API key and see everything at **[realcryptocap.com/api](https://realcryptocap.com/api)**.
+Get the MCP at **[realcryptocap.com/mcp](https://realcryptocap.com/mcp)** (API docs: [realcryptocap.com/api](https://realcryptocap.com/api)).
 
 ## Project layout
 

@@ -80,10 +80,12 @@ function render(data) {
     const el = document.createElement("div");
     el.className = "row";
     el.innerHTML =
-      '<div><span class="name"></span><span class="sym"></span></div>' +
-      '<div class="price"></div><div class="chg"></div>';
+      '<div><span class="rank"></span><span class="name"></span><span class="sym"></span></div>' +
+      '<div class="pc"><div class="price"></div><div class="cap"></div></div><div class="chg"></div>';
     el.querySelector(".name").textContent = c.name || c.id || "";
     el.querySelector(".sym").textContent = c.symbol || "";
+    el.querySelector(".rank").textContent = c.rank != null ? "#" + c.rank : "";
+    el.querySelector(".cap").textContent = c.not_found || c.market_cap == null ? "" : "MCap " + fmtUsd(c.market_cap);
     el.querySelector(".price").textContent = c.not_found ? "not in native universe" : fmtUsd(c.price);
     const chg = el.querySelector(".chg");
     chg.textContent = pct.text;

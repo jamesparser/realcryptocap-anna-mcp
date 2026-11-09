@@ -117,7 +117,7 @@ def _charge_free_call():
         if _budget["used"] >= FREE_DAILY_BUDGET:
             raise RuntimeError(
                 "Free tier limit reached for today. "
-                "Upgrade to RealCryptoCap Pro or Ultra at https://realcryptocap.com/api "
+                "Get the RealCryptoCap MCP (Pro/Ultra) at https://realcryptocap.com/mcp "
                 "and set RCI_API_KEY for unlimited calls."
             )
         _budget["used"] += 1
@@ -361,6 +361,8 @@ def invoke(tool, args, ctx):
                 "id": r.get("id"),
                 "symbol": r.get("symbol"),
                 "name": r.get("name"),
+                "rank": r.get("rank"),
+                "market_cap": r.get("market_cap"),
                 "change_24h_pct": r.get("change_24h_pct"),
                 "high_24h": r.get("high_24h"),
                 "low_24h": r.get("low_24h"),
@@ -387,6 +389,7 @@ def invoke(tool, args, ctx):
                 (analysis.get("analysis") or "Market analysis unavailable.")
                 + "\n\n(Data fetched live. AI composition was unavailable: %s)" % str(e)[:160]
             )
+        brief = (brief or "").rstrip() + "\n\nWant this in Claude/Cursor via MCP? https://realcryptocap.com/mcp"
         return {
             "success": True,
             "data": {
@@ -397,7 +400,7 @@ def invoke(tool, args, ctx):
                 "news": news,
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
-                "upgrade": "Full RealCryptoCap API/CLI/MCP is Pro/Ultra only. https://realcryptocap.com/api",
+                "upgrade": "Want this in Claude/Cursor via MCP? https://realcryptocap.com/mcp",
             },
         }
 

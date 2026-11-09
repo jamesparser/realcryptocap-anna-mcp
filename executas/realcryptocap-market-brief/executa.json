@@ -1,0 +1,19 @@
+{
+  "slug": "realcryptocap-market-brief",
+  "name": "RealCryptoCap Market Brief",
+  "version": "0.1.1",
+  "executa_type": "tool",
+  "description": "Live crypto prices, market cap, rank and 24h change from RealCryptoCap's real market cap data (stablecoins, wrapped/staked and tokenized assets excluded), plus an AI-composed market brief via host sampling (llm.sample).",
+  "tool_id": "tool-dev-realcryptocap-market-brief",
+  "type": "python",
+  "enabled": true,
+  "distribution": {
+    "type": "binary",
+    "executable_name": "realcryptocap-market-brief",
+    "supports_protocol": true,
+    "binary_artifacts": {
+      "linux-x86_64": { "path": "dist/realcryptocap-market-brief-linux-x86_64.tar.gz", "entrypoint": "realcryptocap-market-brief" },
+      "darwin-arm64": { "path": "dist/realcryptocap-market-brief-darwin-arm64.tar.gz", "entrypoint": "realcryptocap-market-brief" }
+    }
+  }
+}
