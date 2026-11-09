@@ -2,7 +2,7 @@
 // Talks to the bundled Executa through the Anna host tools.invoke RPC.
 import { AnnaAppRuntime } from "/static/anna-apps/_sdk/latest/index.js";
 
-const TOOL_ID = "tool-dev-realcryptocap-market-brief";
+const TOOL_ID = "tool-jasonparser-realcryptocap-market-brief-srwkkp4n";
 const STORAGE_KEY = "rcc-brief:last";
 
 const $ = (id) => document.getElementById(id);

@@ -1,7 +1,11 @@
 {
-  "name": "tool-dev-realcryptocap-market-brief",
+  "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.0",
+  "version": "0.1.3",
+  "icon": "\ud83d\udcc8",
+  "category": "data",
+  "homepage": "https://realcryptocap.com/mcp",
+  "license": "MIT",
   "description": "Real crypto market prices, 24h change, and AI-composed market briefs. Real market cap methodology excludes stablecoins, wrapped/staked receipts, and tokenized assets. Full RealCryptoCap API/CLI/MCP is Pro/Ultra only.",
   "author": "Node0 Data Systems / RealCryptoCap <contact@realcryptocap.com>",
   "host_capabilities": [
@@ -11,44 +15,41 @@
     {
       "name": "get_price",
       "description": "Get current USD price, market cap, and rank for one or more native cryptocurrencies. Stablecoins, wrapped/staked receipts and tokenized assets are excluded by the RealCryptoCap filter. Pass CoinGecko ids such as bitcoin, ethereum, solana.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "coin_ids": {
-            "type": "string",
-            "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
-          }
-        },
-        "additionalProperties": false
-      }
+      "timeout": 90,
+      "parameters": [
+        {
+          "name": "coin_ids",
+          "type": "string",
+          "required": false,
+          "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
+        }
+      ]
     },
     {
       "name": "get_24h_change",
       "description": "Get 24 hour price change percent, 24h high/low, and 24h volume for one or more native cryptocurrencies.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "coin_ids": {
-            "type": "string",
-            "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
-          }
-        },
-        "additionalProperties": false
-      }
+      "timeout": 90,
+      "parameters": [
+        {
+          "name": "coin_ids",
+          "type": "string",
+          "required": false,
+          "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
+        }
+      ]
     },
     {
       "name": "get_ai_summary",
       "description": "Compose an AI market brief from live RealCryptoCap data. Fetches prices, 24h change, the RealCryptoCap AI 24h analysis and headline news, then asks the Anna host LLM to write a short trader brief with bias, key levels and movers. Returns the brief plus the raw inputs.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "coin_ids": {
-            "type": "string",
-            "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."
-          }
-        },
-        "additionalProperties": false
-      }
+      "timeout": 90,
+      "parameters": [
+        {
+          "name": "coin_ids",
+          "type": "string",
+          "required": false,
+          "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."
+        }
+      ]
     }
   ]
 }

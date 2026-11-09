@@ -25,9 +25,13 @@ RCI_BASE = "https://realcryptocap.com"
 FREE_DAILY_BUDGET = 80
 
 MANIFEST = {
-    "name": "tool-dev-realcryptocap-market-brief",
+    "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.0",
+    "version": "0.1.3",
+    "icon": "📈",
+    "category": "data",
+    "homepage": "https://realcryptocap.com/mcp",
+    "license": "MIT",
     "description": (
         "Real crypto market prices, 24h change, and AI-composed market briefs. "
         "Real market cap methodology excludes stablecoins, wrapped/staked receipts, "
@@ -44,16 +48,10 @@ MANIFEST = {
                 "assets are excluded by the RealCryptoCap filter. Pass CoinGecko ids "
                 "such as bitcoin, ethereum, solana."
             ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "coin_ids": {
-                        "type": "string",
-                        "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'.",
-                    }
-                },
-                "additionalProperties": False,
-            },
+            "timeout": 90,
+            "parameters": [
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."}
+            ],
         },
         {
             "name": "get_24h_change",
@@ -61,16 +59,10 @@ MANIFEST = {
                 "Get 24 hour price change percent, 24h high/low, and 24h volume for "
                 "one or more native cryptocurrencies."
             ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "coin_ids": {
-                        "type": "string",
-                        "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'.",
-                    }
-                },
-                "additionalProperties": False,
-            },
+            "timeout": 90,
+            "parameters": [
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."}
+            ],
         },
         {
             "name": "get_ai_summary",
@@ -80,16 +72,10 @@ MANIFEST = {
                 "news, then asks the Anna host LLM to write a short trader brief with "
                 "bias, key levels and movers. Returns the brief plus the raw inputs."
             ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "coin_ids": {
-                        "type": "string",
-                        "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'.",
-                    }
-                },
-                "additionalProperties": False,
-            },
+            "timeout": 90,
+            "parameters": [
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."}
+            ],
         },
     ],
 }
@@ -330,16 +316,33 @@ def _lines_for(rows):
     return out
 
 
+_PRO_ONLY_RE = re.compile(
+    r"fear|greed|sentiment index|signal|funding|open interest|long/short|long-short|"
+    r"liquidation|derivative|etf flow|traderspy|whale|positioning|leverage",
+    re.I,
+)
+
+
+def _scrub(text):
+    """Drop sentences that leak Pro-only data (fear & greed, signals, derivatives)."""
+    if not text:
+        return ""
+    parts = re.split(r"(?<=[.!?])\s+", str(text))
+    return " ".join(p for p in parts if not _PRO_ONLY_RE.search(p)).strip()
+
+
 def _compose_brief(ctx, rows, analysis, news, prompt_extra=""):
     prompt = (
         "Write a crypto market brief.\n\n"
         "Live prices (RealCryptoCap, real cap methodology):\n"
         + ("\n".join(_lines_for(rows)) if rows else "no price rows")
         + "\n\nRealCryptoCap AI 24h analysis:\n"
-        + (analysis.get("analysis") or analysis.get("title") or "none")
+        + (_scrub(analysis.get("analysis") or analysis.get("title")) or "none")
         + "\n\nHeadlines:\n"
         + ("\n".join("- %s (%s)" % (n.get("title"), n.get("source")) for n in news) if news else "none")
-        + "\n"
+        + "\n\nRules: use only price, market cap, rank, 24h change, key price levels and the headlines. "
+        "Do NOT mention Fear & Greed, sentiment scores, signal scores, funding rates, open interest, "
+        "long/short ratios, liquidations, ETF flows or any derivatives data. Keep it under 180 words.\n"
         + prompt_extra
     )
     return _sample(ctx.get("invoke_id", "unknown"), prompt)
@@ -386,7 +389,7 @@ def invoke(tool, args, ctx):
         except Exception as e:
             # Graceful degradation: still return the AI analysis and the data.
             brief = (
-                (analysis.get("analysis") or "Market analysis unavailable.")
+                (_scrub(analysis.get("analysis")) or "Market analysis unavailable.")
                 + "\n\n(Data fetched live. AI composition was unavailable: %s)" % str(e)[:160]
             )
         brief = (brief or "").rstrip() + "\n\nWant this in Claude/Cursor via MCP? https://realcryptocap.com/mcp"
@@ -396,7 +399,6 @@ def invoke(tool, args, ctx):
                 "brief": brief,
                 "ai_composed": composed,
                 "coins": rows,
-                "analysis": analysis,
                 "news": news,
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
@@ -424,7 +426,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.0"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.3"},
                             "capabilities": {"sampling": {}},
                         },
                     }
