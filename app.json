@@ -1,7 +1,7 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "tagline": "AI crypto market briefs on real market cap data, stablecoins excluded",
   "description": "Generate a trader-ready crypto market brief in one click. RealCryptoCap Market Brief pulls live prices, market cap, rank and 24h change from RealCryptoCap's real market cap data (stablecoins, wrapped/staked receipts and tokenized assets excluded), folds in the RealCryptoCap AI 24h analysis and current headlines, and composes a short brief with bias, key levels and what to watch. Pick your coins, hit Generate, get a brief. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
   "category": "data"
