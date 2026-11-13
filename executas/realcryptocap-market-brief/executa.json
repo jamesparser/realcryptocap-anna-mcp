@@ -1,7 +1,7 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "executa_type": "tool",
   "description": "Live crypto prices, market cap, rank and 24h change from RealCryptoCap's real market cap data (stablecoins, wrapped/staked and tokenized assets excluded), plus an AI-composed market brief via host sampling (llm.sample).",
   "tool_id": "tool-dev-realcryptocap-market-brief",

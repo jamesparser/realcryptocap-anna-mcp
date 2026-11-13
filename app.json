@@ -1,8 +1,8 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "tagline": "AI crypto market briefs on real market cap data, stablecoins excluded",
-  "description": "Generate a trader-ready crypto market brief in one click. RealCryptoCap Market Brief pulls live prices, market cap, rank and 24h change from RealCryptoCap's real market cap data (stablecoins, wrapped/staked receipts and tokenized assets excluded), folds in the RealCryptoCap AI 24h analysis and current headlines, and composes a short brief with bias, key levels and what to watch. Pick your coins, hit Generate, get a brief. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
+  "description": "Generate a crypto market brief in one click. RealCryptoCap Market Brief pulls price, market cap, rank, 24h change and 24h range from RealCryptoCap's real market cap list (CoinGecko data cross-checked with CoinMarketCap and HTX; stablecoins, wrapped/staked receipts and tokenized assets excluded). Prices refresh every 1-2 minutes and every brief shows the exact 'data as of' time in UTC. The AI writes a short brief with a bias, key levels and what to watch. Key levels are the 24h low (support) and 24h high (resistance), stated with their basis, never invented targets. Recent headlines link to the original articles with their publication time. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
   "category": "data"
 }

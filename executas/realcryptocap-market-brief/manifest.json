@@ -1,7 +1,7 @@
 {
   "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "icon": "\ud83d\udcc8",
   "category": "data",
   "homepage": "https://realcryptocap.com/mcp",
@@ -40,7 +40,7 @@
     },
     {
       "name": "get_ai_summary",
-      "description": "Compose an AI market brief from live RealCryptoCap data. Fetches prices, 24h change, the RealCryptoCap AI 24h analysis and headline news, then asks the Anna host LLM to write a short trader brief with bias, key levels and movers. Returns the brief plus the raw inputs.",
+      "description": "Compose an AI market brief from live RealCryptoCap data. Fetches prices, 24h change and 24h range plus headline news (with links), then asks the Anna host LLM to write a short brief: bias, key levels (24h low/high, stated basis) and what to watch. Returns the brief, a data timestamp and source notes.",
       "timeout": 90,
       "parameters": [
         {

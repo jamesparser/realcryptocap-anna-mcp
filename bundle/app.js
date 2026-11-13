@@ -34,6 +34,12 @@ function fmtUsd(n) {
   return "$" + v.toPrecision(4);
 }
 
+function fmtTime(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC", hour12: false }) + " UTC";
+}
+
 function fmtPct(n) {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return { text: "n/a", cls: "flat" };
   const v = Number(n);
@@ -71,7 +77,30 @@ function render(data) {
   badge.textContent = data.ai_composed ? "AI composed" : "AI analysis";
   badge.classList.toggle("fallback", !data.ai_composed);
 
-  $("brief-text").textContent = data.brief || "No brief produced.";
+  const meta = data.meta || {};
+  const full = data.brief || "No brief produced.";
+  $("brief-text").textContent = full.split("\n\nData: ")[0];
+  $("asof").textContent = meta.data_as_of_utc
+    ? "Prices as of " + fmtTime(meta.data_as_of_utc) + " · refreshes every 1-2 min"
+    : "";
+  const method = $("method");
+  method.innerHTML = "";
+  [
+    ["Source", meta.source],
+    ["Data as of", meta.data_as_of_utc ? fmtTime(meta.data_as_of_utc) : null],
+    ["Fetched", meta.fetched_at_utc ? fmtTime(meta.fetched_at_utc) : null],
+    ["Refresh", meta.refresh],
+    ["Key levels", meta.levels_basis],
+    ["Note", "AI-written summary of the data above. Not investment advice."],
+  ].forEach(([k, v]) => {
+    if (!v) return;
+    const li = document.createElement("li");
+    const b = document.createElement("b");
+    b.textContent = k + ": ";
+    li.appendChild(b);
+    li.appendChild(document.createTextNode(v));
+    method.appendChild(li);
+  });
 
   const rows = $("price-rows");
   rows.innerHTML = "";
@@ -80,11 +109,15 @@ function render(data) {
     const el = document.createElement("div");
     el.className = "row";
     el.innerHTML =
-      '<div><span class="rank"></span><span class="name"></span><span class="sym"></span></div>' +
+      '<div><div><span class="rank"></span><span class="name"></span><span class="sym"></span></div><div class="lv"></div></div>' +
       '<div class="pc"><div class="price"></div><div class="cap"></div></div><div class="chg"></div>';
     el.querySelector(".name").textContent = c.name || c.id || "";
     el.querySelector(".sym").textContent = c.symbol || "";
     el.querySelector(".rank").textContent = c.rank != null ? "#" + c.rank : "";
+    const lv = c.levels;
+    el.querySelector(".lv").textContent = lv
+      ? "Support " + fmtUsd(lv.support) + " · Resistance " + fmtUsd(lv.resistance) + " (" + lv.basis + ")"
+      : "";
     el.querySelector(".cap").textContent = c.not_found || c.market_cap == null ? "" : "MCap " + fmtUsd(c.market_cap);
     el.querySelector(".price").textContent = c.not_found ? "not in native universe" : fmtUsd(c.price);
     const chg = el.querySelector(".chg");
@@ -107,10 +140,10 @@ function render(data) {
     } else {
       li.textContent = n.title || "";
     }
-    if (n.source) {
+    if (n.source || n.date) {
       const s = document.createElement("span");
       s.className = "src";
-      s.textContent = n.source;
+      s.textContent = [n.source, n.published_utc ? fmtTime(n.published_utc) : n.date].filter(Boolean).join(" · ");
       li.appendChild(s);
     }
     news.appendChild(li);

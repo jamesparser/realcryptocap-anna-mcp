@@ -5,9 +5,17 @@
       "tool_id": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n"
     }
   ],
-  "host_capabilities": ["llm.sample"],
-  "system_prompt_addendum": "You are driving RealCryptoCap Market Brief. When the user asks for a market brief, price, 24h change, or a crypto market summary, use the bundled tools instead of reciting memorized prices. Call get_price and get_24h_change for concrete numbers, and get_ai_summary for the composed brief. RealCryptoCap methodology excludes stablecoins, wrapped/staked receipts and tokenized assets from market cap, so say so if a user asks why a coin is missing. Keep answers short and trader-readable: bias first, then key levels, then what to watch. Never invent prices. If a tool reports the free tier limit, tell the user the full RealCryptoCap API/CLI/MCP is Pro/Ultra only at realcryptocap.com/mcp and an API key is required. Do not provide fear & greed, derivatives or signal data; point users to the MCP for that.",
-  "tags": ["crypto", "market-brief", "realcryptocap", "finance", "ai"],
+  "host_capabilities": [
+    "llm.sample"
+  ],
+  "system_prompt_addendum": "You are driving RealCryptoCap Market Brief. When the user asks for a market brief, price, 24h change, or a crypto market summary, use the bundled tools instead of reciting memorized prices. Call get_price and get_24h_change for concrete numbers, and get_ai_summary for the composed brief. RealCryptoCap methodology excludes stablecoins, wrapped/staked receipts and tokenized assets from market cap, so say so if a user asks why a coin is missing. Keep answers short and trader-readable: bias first, then key levels, then what to watch. Never invent prices. If a tool reports the free tier limit, tell the user the full RealCryptoCap API/CLI/MCP is Pro/Ultra only at realcryptocap.com/mcp and an API key is required. Do not provide fear & greed, derivatives or signal data; point users to the MCP for that. Always state the 'data as of' UTC time returned in meta.data_as_of_utc. Key levels must be the 24h low (support) and 24h high (resistance) from the tool output, named as such; never invent price targets. When citing a headline, include its link.",
+  "tags": [
+    "crypto",
+    "market-brief",
+    "realcryptocap",
+    "finance",
+    "ai"
+  ],
   "ui": {
     "bundle": {
       "format": "static-spa",
@@ -19,20 +27,36 @@
         "name": "main",
         "title": "RealCryptoCap Market Brief",
         "default": true,
-        "default_size": { "w": 520, "h": 620 },
-        "min_size": { "w": 340, "h": 420 }
+        "default_size": {
+          "w": 520,
+          "h": 620
+        },
+        "min_size": {
+          "w": 340,
+          "h": 420
+        }
       }
     ],
     "host_api": {
-      "tools": ["tool-jasonparser-realcryptocap-market-brief-srwkkp4n"],
-      "storage": ["get", "set"],
-      "window": ["set_title", "ready"]
+      "tools": [
+        "tool-jasonparser-realcryptocap-market-brief-srwkkp4n"
+      ],
+      "storage": [
+        "get",
+        "set"
+      ],
+      "window": [
+        "set_title",
+        "ready"
+      ]
     },
     "csp_overrides": {},
     "state_merge": "last_writer_wins"
   },
   "dev": {
-    "fixtures": ["fixtures/*.jsonl"],
+    "fixtures": [
+      "fixtures/*.jsonl"
+    ],
     "seed_storage": {},
     "user_id": 1
   }

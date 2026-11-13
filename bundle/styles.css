@@ -182,9 +182,14 @@ main { padding: 16px 20px 28px; display: grid; gap: 14px; }
 .chg.down { color: var(--down); }
 .chg.flat { color: var(--muted); }
 
+.asof { margin: -4px 0 10px; color: var(--muted); font-size: 11px; font-family: var(--mono); }
+.row .lv { color: var(--muted); font-size: 10.5px; margin-top: 3px; font-family: var(--mono); }
+.method { margin: 0; padding-left: 18px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.method li { margin-bottom: 4px; }
+.method b { color: var(--ink); font-weight: 600; }
 .news { margin: 0; padding-left: 18px; }
 .news li { margin-bottom: 6px; color: var(--muted); font-size: 12px; }
-.news a { color: var(--ink); text-decoration: none; }
+.news a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
 .news a:hover { text-decoration: underline; }
 .news .src { color: var(--accent); margin-left: 6px; font-size: 11px; }
 

@@ -27,7 +27,7 @@ FREE_DAILY_BUDGET = 80
 MANIFEST = {
     "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.3",
+    "version": "0.1.5",
     "icon": "📈",
     "category": "data",
     "homepage": "https://realcryptocap.com/mcp",
@@ -68,9 +68,10 @@ MANIFEST = {
             "name": "get_ai_summary",
             "description": (
                 "Compose an AI market brief from live RealCryptoCap data. Fetches "
-                "prices, 24h change, the RealCryptoCap AI 24h analysis and headline "
-                "news, then asks the Anna host LLM to write a short trader brief with "
-                "bias, key levels and movers. Returns the brief plus the raw inputs."
+                "prices, 24h change and 24h range plus headline news (with links), then "
+                "asks the Anna host LLM to write a short brief: bias, key levels (24h "
+                "low/high, stated basis) and what to watch. Returns the brief, a data "
+                "timestamp and source notes."
             ),
             "timeout": 90,
             "parameters": [
@@ -158,6 +159,10 @@ def _cg_markets(coin_ids):
     limit = 300 if len(wanted) <= 3 else 600
     rows = _get_json("/api/cg?topCoins=1&limit=%d" % limit)
     coins = rows.get("coins") if isinstance(rows, dict) else rows
+    if isinstance(rows, dict):
+        _META["cached_at_ms"] = rows.get("cachedAt") or rows.get("universeTs")
+        _META["providers"] = rows.get("source")
+        _META["price_source"] = rows.get("priceSource")
     by_id = {}
     for c in coins or []:
         cid = (c.get("id") or "").lower()
@@ -183,9 +188,59 @@ def _cg_markets(coin_ids):
                 "high_24h": c.get("high_24h"),
                 "low_24h": c.get("low_24h"),
                 "volume_24h": c.get("total_volume"),
+                "last_updated": c.get("last_updated"),
+                "levels": _levels(c),
             }
         )
     return out
+
+
+_META = {}
+REFRESH_NOTE = "Prices refresh every 1-2 minutes on realcryptocap.com."
+SOURCE_NOTE = (
+    "RealCryptoCap real market cap list (realcryptocap.com/api/cg): CoinGecko market data "
+    "with CoinMarketCap and HTX price cross-checks; stablecoins, wrapped/staked and tokenized assets excluded."
+)
+LEVELS_NOTE = (
+    "Key levels are not forecasts: support = 24h low, resistance = 24h high, taken from the "
+    "same RealCryptoCap data (hourly 7d sparkline used if the 24h range is missing)."
+)
+
+
+def _levels(c):
+    """Support/resistance with an explicit, reproducible basis."""
+    hi, lo = c.get("high_24h"), c.get("low_24h")
+    if isinstance(hi, (int, float)) and isinstance(lo, (int, float)) and hi > 0 and lo > 0:
+        return {"support": lo, "resistance": hi, "basis": "24h low / 24h high"}
+    spark = ((c.get("sparkline_in_7d") or {}).get("price")) or []
+    last = [x for x in spark[-24:] if isinstance(x, (int, float))]
+    if len(last) >= 6:
+        return {"support": min(last), "resistance": max(last), "basis": "24h low / high from hourly 7d sparkline"}
+    return None
+
+
+def _iso_utc(ms_or_iso):
+    if not ms_or_iso:
+        return None
+    try:
+        if isinstance(ms_or_iso, (int, float)):
+            return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ms_or_iso / 1000.0))
+        return str(ms_or_iso)[:19].replace(" ", "T") + "Z" if not str(ms_or_iso).endswith("Z") else str(ms_or_iso)[:19] + "Z"
+    except Exception:
+        return None
+
+
+def _data_meta(rows):
+    stamps = [r.get("last_updated") for r in rows if r.get("last_updated")]
+    as_of = _iso_utc(_META.get("cached_at_ms")) or (max(stamps)[:19] + "Z" if stamps else None)
+    return {
+        "data_as_of_utc": as_of,
+        "fetched_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "source": SOURCE_NOTE,
+        "refresh": REFRESH_NOTE,
+        "levels_basis": LEVELS_NOTE,
+        "source_url": "https://realcryptocap.com",
+    }
 
 
 def _market_analysis():
@@ -201,7 +256,16 @@ def _news_headlines(limit=4):
         items = data.get("items") if isinstance(data, dict) else data
         out = []
         for it in (items or [])[:limit]:
-            out.append({"title": it.get("title"), "source": it.get("source"), "date": it.get("date")})
+            url = (it.get("url") or "").split("?utm_")[0].split("&utm_")[0]
+            out.append(
+                {
+                    "title": it.get("title"),
+                    "source": it.get("source"),
+                    "date": it.get("date"),
+                    "published_utc": _iso_utc(it.get("ts")),
+                    "url": url if url.startswith("http") else None,
+                }
+            )
         return out
     except Exception:
         return []
@@ -303,7 +367,7 @@ def _lines_for(rows):
         ch = r.get("change_24h_pct")
         ch_s = ("%+.2f%%" % ch) if isinstance(ch, (int, float)) else "n/a"
         out.append(
-            "%s (%s): %s, 24h %s, cap %s, rank %s"
+            "%s (%s): %s, 24h %s, cap %s, rank %s, support %s / resistance %s (basis: %s)"
             % (
                 r.get("name") or r.get("id"),
                 r.get("symbol") or "",
@@ -311,6 +375,9 @@ def _lines_for(rows):
                 ch_s,
                 _fmt_usd(r.get("market_cap")) or "n/a",
                 r.get("rank") if r.get("rank") is not None else "n/a",
+                _fmt_usd((r.get("levels") or {}).get("support")) or "n/a",
+                _fmt_usd((r.get("levels") or {}).get("resistance")) or "n/a",
+                (r.get("levels") or {}).get("basis") or "unavailable",
             )
         )
     return out
@@ -331,21 +398,50 @@ def _scrub(text):
     return " ".join(p for p in parts if not _PRO_ONLY_RE.search(p)).strip()
 
 
-def _compose_brief(ctx, rows, analysis, news, prompt_extra=""):
+def _compose_brief(ctx, rows, news, meta, prompt_extra=""):
     prompt = (
-        "Write a crypto market brief.\n\n"
-        "Live prices (RealCryptoCap, real cap methodology):\n"
+        "Write a short crypto market brief from ONLY the data below.\n\n"
+        "Prices (RealCryptoCap real market cap list, data as of %s UTC):\n" % (meta.get("data_as_of_utc") or "n/a")
         + ("\n".join(_lines_for(rows)) if rows else "no price rows")
-        + "\n\nRealCryptoCap AI 24h analysis:\n"
-        + (_scrub(analysis.get("analysis") or analysis.get("title")) or "none")
         + "\n\nHeadlines:\n"
-        + ("\n".join("- %s (%s)" % (n.get("title"), n.get("source")) for n in news) if news else "none")
-        + "\n\nRules: use only price, market cap, rank, 24h change, key price levels and the headlines. "
-        "Do NOT mention Fear & Greed, sentiment scores, signal scores, funding rates, open interest, "
-        "long/short ratios, liquidations, ETF flows or any derivatives data. Keep it under 180 words.\n"
+        + ("\n".join("- %s (%s, %s)" % (n.get("title"), n.get("source"), n.get("date")) for n in news) if news else "none")
+        + "\n\nRules:\n"
+        "- Structure: 1) bias in one sentence, 2) key levels, 3) what to watch.\n"
+        "- Key levels: quote ONLY the support/resistance numbers given above and always say they are the "
+        "24h low/high (e.g. 'support at the 24h low of $X'). Never invent other levels, price targets or forecasts.\n"
+        "- Use only price, market cap, rank, 24h change, the 24h range and the headlines.\n"
+        "- Do NOT mention Fear & Greed, sentiment or signal scores, funding, open interest, long/short, "
+        "liquidations, ETF flows or derivatives.\n"
+        "- Under 170 words. Plain text, no markdown headings.\n"
         + prompt_extra
     )
     return _sample(ctx.get("invoke_id", "unknown"), prompt)
+
+
+def _fallback_brief(rows):
+    out = []
+    for r in rows:
+        if r.get("not_found"):
+            continue
+        lv = r.get("levels") or {}
+        ch = r.get("change_24h_pct")
+        out.append(
+            "%s is %s (%s over 24h)%s."
+            % (
+                r.get("name"),
+                _fmt_usd(r.get("price")) or "n/a",
+                ("%+.2f%%" % ch) if isinstance(ch, (int, float)) else "n/a",
+                (", 24h range %s to %s" % (_fmt_usd(lv.get("support")), _fmt_usd(lv.get("resistance")))) if lv else "",
+            )
+        )
+    return " ".join(out) or "No price data available."
+
+
+def _footer(meta):
+    return (
+        "\n\nData: %s Prices as of %s UTC. %s %s Not investment advice."
+        % (meta["source"], meta.get("data_as_of_utc") or "n/a", meta["refresh"], meta["levels_basis"])
+    )
 
 
 def invoke(tool, args, ctx):
@@ -353,7 +449,7 @@ def invoke(tool, args, ctx):
         _charge_free_call()
         ids = _parse_ids(args.get("coin_ids"), ("bitcoin",))
         rows = _cg_markets(ids)
-        return {"success": True, "data": {"coins": rows, "provider": "realcryptocap.com", "tier": "pro" if _api_key() else "free"}}
+        return {"success": True, "data": {"coins": rows, "meta": _data_meta(rows), "provider": "realcryptocap.com", "tier": "pro" if _api_key() else "free"}}
 
     if tool == "get_24h_change":
         _charge_free_call()
@@ -370,29 +466,27 @@ def invoke(tool, args, ctx):
                 "high_24h": r.get("high_24h"),
                 "low_24h": r.get("low_24h"),
                 "volume_24h": r.get("volume_24h"),
+                "levels": r.get("levels"),
+                "last_updated": r.get("last_updated"),
             }
             for r in rows
         ]
-        return {"success": True, "data": {"coins": slim, "provider": "realcryptocap.com"}}
+        return {"success": True, "data": {"coins": slim, "meta": _data_meta(rows), "provider": "realcryptocap.com"}}
 
     if tool == "get_ai_summary":
         _charge_free_call()
         ids = _parse_ids(args.get("coin_ids"), ("bitcoin", "ethereum"))
         rows = _cg_markets(ids)
-        analysis = _market_analysis()
+        meta = _data_meta(rows)
         news = _news_headlines()
-        brief = None
         composed = False
         try:
-            brief = _compose_brief(ctx, rows, analysis, news)
+            brief = _compose_brief(ctx, rows, news, meta)
+            brief = _scrub(brief) if _PRO_ONLY_RE.search(brief or "") else brief
             composed = True
         except Exception as e:
-            # Graceful degradation: still return the AI analysis and the data.
-            brief = (
-                (_scrub(analysis.get("analysis")) or "Market analysis unavailable.")
-                + "\n\n(Data fetched live. AI composition was unavailable: %s)" % str(e)[:160]
-            )
-        brief = (brief or "").rstrip() + "\n\nWant this in Claude/Cursor via MCP? https://realcryptocap.com/mcp"
+            brief = _fallback_brief(rows) + "\n\n(AI composition was unavailable: %s)" % str(e)[:160]
+        brief = (brief or "").rstrip() + _footer(meta) + "\n\nWant this in Claude/Cursor via MCP? https://realcryptocap.com/mcp"
         return {
             "success": True,
             "data": {
@@ -400,6 +494,7 @@ def invoke(tool, args, ctx):
                 "ai_composed": composed,
                 "coins": rows,
                 "news": news,
+                "meta": meta,
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
                 "upgrade": "Want this in Claude/Cursor via MCP? https://realcryptocap.com/mcp",
@@ -426,7 +521,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.3"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.5"},
                             "capabilities": {"sampling": {}},
                         },
                     }
