@@ -4,6 +4,16 @@ import { AnnaAppRuntime } from "/static/anna-apps/_sdk/latest/index.js";
 
 const TOOL_ID = "tool-jasonparser-realcryptocap-market-brief-srwkkp4n";
 const STORAGE_KEY = "rcc-brief:last";
+const WATCH_KEY = "rcc:watchlist";
+const PREFS_KEY = "rcc:prefs";
+const HIST_KEY = "rcc:history";
+const HIST_MAX = 20;
+const DEFAULT_WATCH = ["bitcoin", "ethereum", "solana", "dogecoin", "chainlink"];
+const SYMBOLS = { bitcoin: "BTC", ethereum: "ETH", solana: "SOL", dogecoin: "DOGE", chainlink: "LINK", ripple: "XRP", cardano: "ADA", binancecoin: "BNB", tron: "TRX", avalanche_2: "AVAX" };
+
+let watchlist = DEFAULT_WATCH.slice();
+let prefs = { style: "short", focus: "balanced" };
+let history = [];
 
 const $ = (id) => document.getElementById(id);
 
@@ -47,19 +57,117 @@ function fmtPct(n) {
   return { text: (v > 0 ? "+" : "") + v.toFixed(2) + "%", cls };
 }
 
-function syncChips() {
-  document.querySelectorAll(".chip").forEach((c) => {
-    c.classList.toggle("on", selected.has(c.dataset.id));
+function symOf(id) {
+  return SYMBOLS[id] || id.toUpperCase().slice(0, 6);
+}
+
+let saveChain = Promise.resolve();
+function save(key, value) {
+  if (!anna) return Promise.resolve();
+  const snapshot = JSON.parse(JSON.stringify(value));
+  saveChain = saveChain.then(() => anna.storage.set({ key, value: snapshot })).catch(() => {});
+  return saveChain;
+}
+
+async function load(key) {
+  if (!anna) return undefined;
+  try {
+    const r = await anna.storage.get({ key });
+    return r && r.value !== undefined ? r.value : r;
+  } catch (_) { return undefined; }
+}
+
+function renderChips() {
+  const box = $("chips");
+  box.innerHTML = "";
+  watchlist.forEach((id) => {
+    const chip = document.createElement("span");
+    chip.className = "chip" + (selected.has(id) ? " on" : "");
+    chip.dataset.id = id;
+    chip.title = id;
+    const t = document.createElement("button");
+    t.type = "button";
+    t.className = "chip-t";
+    t.textContent = symOf(id);
+    t.addEventListener("click", () => {
+      if (selected.has(id)) selected.delete(id); else selected.add(id);
+      renderChips();
+    });
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "chip-x";
+    x.setAttribute("aria-label", "Remove " + id);
+    x.textContent = "×";
+    x.addEventListener("click", () => {
+      watchlist = watchlist.filter((w) => w !== id);
+      selected.delete(id);
+      renderChips();
+      save(WATCH_KEY, watchlist);
+    });
+    chip.appendChild(t);
+    chip.appendChild(x);
+    box.appendChild(chip);
   });
+  if (!watchlist.length) {
+    const p = document.createElement("span");
+    p.className = "hint";
+    p.textContent = "Your watchlist is empty. Add a coin below.";
+    box.appendChild(p);
+  }
+}
+
+function addCoins() {
+  const ids = ($("coin-input").value || "").split(",").map((s) => s.trim().toLowerCase().replace(/\s+/g, "-")).filter(Boolean);
+  ids.forEach((id) => {
+    if (!watchlist.includes(id) && watchlist.length < 20) watchlist.push(id);
+    selected.add(id);
+  });
+  $("coin-input").value = "";
+  renderChips();
+  save(WATCH_KEY, watchlist);
 }
 
 function currentIds() {
-  const typed = ($("coin-input").value || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  const merged = [...selected, ...typed];
-  return [...new Set(merged)].slice(0, 8);
+  return watchlist.filter((id) => selected.has(id)).slice(0, 8);
+}
+
+function previousSnapshot(data) {
+  const at = data && data.meta && data.meta.fetched_at_utc;
+  return history.find((h) => h.fetched !== at) || null;
+}
+
+function renderHistory() {
+  const ul = $("history");
+  ul.innerHTML = "";
+  if (!history.length) {
+    const li = document.createElement("li");
+    li.className = "hint";
+    li.textContent = "No briefs yet.";
+    ul.appendChild(li);
+    return;
+  }
+  history.forEach((h) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "hist-item";
+    const coins = (h.ids || []).map(symOf).join(", ");
+    btn.textContent = fmtTime(new Date(h.at).toISOString()) + " · " + coins + " · " + (h.prefs ? h.prefs.style + "/" + h.prefs.focus : "");
+    btn.addEventListener("click", () => {
+      if (h.data) { render(h.data); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    });
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+}
+
+async function recordHistory(ids, data) {
+  const prices = {};
+  (data.coins || []).forEach((c) => { if (c.id && c.price) prices[c.id] = c.price; });
+  const entry = { at: Date.now(), fetched: data.meta && data.meta.fetched_at_utc, ids, prefs: { ...prefs }, prices, data };
+  history = [entry, ...history].slice(0, HIST_MAX);
+  await save(HIST_KEY, history);
+  renderHistory();
 }
 
 function render(data) {
@@ -102,6 +210,18 @@ function render(data) {
     method.appendChild(li);
   });
 
+  const srcList = $("sources");
+  srcList.innerHTML = "";
+  (data.sources || []).forEach((src) => {
+    const li = document.createElement("li");
+    const b = document.createElement("b");
+    b.textContent = src.name + ": ";
+    li.appendChild(b);
+    li.appendChild(document.createTextNode([src.url, src.access, src.upstream, src.refresh, src.fetched].filter(Boolean).join(" ")));
+    srcList.appendChild(li);
+  });
+
+  const prev = previousSnapshot(data);
   const rows = $("price-rows");
   rows.innerHTML = "";
   (data.coins || []).forEach((c) => {
@@ -118,7 +238,13 @@ function render(data) {
     el.querySelector(".lv").textContent = lv
       ? "Support " + fmtUsd(lv.support) + " · Resistance " + fmtUsd(lv.resistance) + " (" + lv.basis + ")"
       : "";
-    el.querySelector(".cap").textContent = c.not_found || c.market_cap == null ? "" : "MCap " + fmtUsd(c.market_cap);
+    let capTxt = c.not_found || c.market_cap == null ? "" : "MCap " + fmtUsd(c.market_cap);
+    const p0 = prev && prev.prices && prev.prices[c.id];
+    if (p0 && c.price) {
+      const d = ((c.price - p0) / p0) * 100;
+      capTxt += " · " + (d >= 0 ? "+" : "") + d.toFixed(2) + "% since " + fmtTime(new Date(prev.at).toISOString());
+    }
+    el.querySelector(".cap").textContent = capTxt;
     el.querySelector(".price").textContent = c.not_found ? "not in native universe" : fmtUsd(c.price);
     const chg = el.querySelector(".chg");
     chg.textContent = pct.text;
@@ -161,7 +287,7 @@ function render(data) {
 async function generate() {
   const ids = currentIds();
   if (!ids.length) {
-    setState("error", "Pick at least one coin.");
+    setState("error", "Select at least one coin from your watchlist.");
     return;
   }
   const btn = $("generate");
@@ -174,15 +300,13 @@ async function generate() {
     const out = await anna.tools.invoke({
       tool_id: TOOL_ID,
       method: "get_ai_summary",
-      args: { coin_ids: ids.join(",") },
+      args: { coin_ids: ids.join(","), style: prefs.style, focus: prefs.focus },
     });
     const payload = (out && out.data) || out || {};
     const data = payload.data && payload.brief === undefined ? payload.data : payload;
     render(data);
     setState("hidden");
-    try {
-      await anna.storage.set({ key: STORAGE_KEY, value: { at: Date.now(), ids, data } });
-    } catch (_) {}
+    await recordHistory(ids, data);
     if (data && data.upgrade) {
       $("quota").textContent = data.upgrade;
     }
@@ -194,18 +318,7 @@ async function generate() {
 }
 
 async function main() {
-  // Chips
-  document.querySelectorAll(".chip").forEach((c) => {
-    c.addEventListener("click", () => {
-      const id = c.dataset.id;
-      if (selected.has(id)) selected.delete(id);
-      else selected.add(id);
-      syncChips();
-    });
-  });
-  syncChips();
-
-  // Standalone preview (no Anna host): still show the shell.
+  renderChips();
   try {
     anna = await AnnaAppRuntime.connect();
     await anna.window.set_title({ title: "RealCryptoCap Market Brief" });
@@ -216,26 +329,30 @@ async function main() {
     setState("error", "Standalone preview (no Anna host). Generate will not run.");
     $("generate").disabled = true;
     $("quota").textContent = "Open inside Anna to generate briefs.";
+    renderHistory();
     return;
   }
 
-  // Restore last brief so the window is useful on re-open.
-  try {
-    const saved = await anna.storage.get({ key: STORAGE_KEY });
-    const val = saved && (saved.value !== undefined ? saved.value : saved);
-    if (val && val.data) {
-      render(val.data);
-      if (val.ids && val.ids.length) {
-        selected = new Set(val.ids.filter((i) => ["bitcoin", "ethereum", "solana", "dogecoin", "chainlink"].includes(i)));
-        syncChips();
-      }
-    }
-  } catch (_) {}
+  const w = await load(WATCH_KEY);
+  if (Array.isArray(w)) watchlist = w;
+  const p = await load(PREFS_KEY);
+  if (p && typeof p === "object") prefs = { ...prefs, ...p };
+  const hist = await load(HIST_KEY);
+  if (Array.isArray(hist)) history = hist;
+  selected = new Set(watchlist.slice(0, 3));
+  if (history[0] && history[0].ids) selected = new Set(history[0].ids.filter((i) => watchlist.includes(i)));
+  $("pref-style").value = prefs.style;
+  $("pref-focus").value = prefs.focus;
+  renderChips();
+  renderHistory();
+  if (history[0] && history[0].data) render(history[0].data);
 
+  $("pref-style").addEventListener("change", (e) => { prefs.style = e.target.value; save(PREFS_KEY, prefs); });
+  $("pref-focus").addEventListener("change", (e) => { prefs.focus = e.target.value; save(PREFS_KEY, prefs); });
+  $("add-coin").addEventListener("click", addCoins);
+  $("coin-input").addEventListener("keydown", (e) => { if (e.key === "Enter") addCoins(); });
   $("generate").addEventListener("click", generate);
-  $("coin-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") generate();
-  });
+  $("clear-history").addEventListener("click", async () => { history = []; await save(HIST_KEY, history); renderHistory(); });
 }
 
 main();

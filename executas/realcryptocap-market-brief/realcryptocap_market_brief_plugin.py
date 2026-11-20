@@ -27,7 +27,7 @@ FREE_DAILY_BUDGET = 80
 MANIFEST = {
     "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "icon": "📈",
     "category": "data",
     "homepage": "https://realcryptocap.com/mcp",
@@ -75,7 +75,9 @@ MANIFEST = {
             ),
             "timeout": 90,
             "parameters": [
-                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."}
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."},
+                {"name": "style", "type": "string", "required": False, "description": "Brief length: 'short' (default, ~120 words) or 'detailed' (~220 words)."},
+                {"name": "focus", "type": "string", "required": False, "description": "Emphasis: 'balanced' (default), 'levels' (price action and 24h range) or 'news' (headlines)."},
             ],
         },
     ],
@@ -196,6 +198,33 @@ def _cg_markets(coin_ids):
 
 
 _META = {}
+
+SOURCES = [
+    {
+        "name": "RealCryptoCap market data API",
+        "url": "https://realcryptocap.com/api/cg?topCoins=1",
+        "access": "Public, no API key or authorization needed by this app.",
+        "upstream": "RealCryptoCap server aggregates CoinGecko market data, cross-checked against CoinMarketCap and HTX prices (provider keys are held server-side by RealCryptoCap).",
+        "refresh": "Server cache refreshes every 1-2 minutes.",
+        "fetched": "Live at runtime on every brief request; nothing is bundled or pre-stored.",
+    },
+    {
+        "name": "RealCryptoCap news API",
+        "url": "https://realcryptocap.com/api/news",
+        "access": "Public, no API key or authorization needed by this app.",
+        "upstream": "Rolling cache of publisher RSS feeds (e.g. Cointelegraph, CoinDesk, Bitcoin Magazine) with Google News fallback; every headline keeps its original link and publication time.",
+        "refresh": "Feed cache refreshes about every 6 hours; headlines are kept for 48 hours.",
+        "fetched": "Live at runtime on every brief request.",
+    },
+    {
+        "name": "Anna host LLM (sampling)",
+        "url": "anna://sampling/createMessage",
+        "access": "Provided by Anna on the user's own credits; no third-party key.",
+        "upstream": "Writes the brief text from the data above only.",
+        "refresh": "Per request.",
+        "fetched": "At runtime.",
+    },
+]
 REFRESH_NOTE = "Prices refresh every 1-2 minutes on realcryptocap.com."
 SOURCE_NOTE = (
     "RealCryptoCap real market cap list (realcryptocap.com/api/cg): CoinGecko market data "
@@ -398,6 +427,17 @@ def _scrub(text):
     return " ".join(p for p in parts if not _PRO_ONLY_RE.search(p)).strip()
 
 
+def _prefs_extra(style, focus):
+    style = (style or "short").lower()
+    focus = (focus or "balanced").lower()
+    words = "about 220 words" if style == "detailed" else "about 120 words"
+    f = {
+        "levels": "Emphasise price action, 24h change and the 24h-range levels; mention headlines briefly.",
+        "news": "Emphasise what the headlines mean for these coins; keep price detail short.",
+    }.get(focus, "Balance price action and headlines.")
+    return "- Length: %s. %s\n" % (words, f)
+
+
 def _compose_brief(ctx, rows, news, meta, prompt_extra=""):
     prompt = (
         "Write a short crypto market brief from ONLY the data below.\n\n"
@@ -412,7 +452,7 @@ def _compose_brief(ctx, rows, news, meta, prompt_extra=""):
         "- Use only price, market cap, rank, 24h change, the 24h range and the headlines.\n"
         "- Do NOT mention Fear & Greed, sentiment or signal scores, funding, open interest, long/short, "
         "liquidations, ETF flows or derivatives.\n"
-        "- Under 170 words. Plain text, no markdown headings.\n"
+        "- Plain text, no markdown headings.\n"
         + prompt_extra
     )
     return _sample(ctx.get("invoke_id", "unknown"), prompt)
@@ -481,7 +521,7 @@ def invoke(tool, args, ctx):
         news = _news_headlines()
         composed = False
         try:
-            brief = _compose_brief(ctx, rows, news, meta)
+            brief = _compose_brief(ctx, rows, news, meta, _prefs_extra(args.get("style"), args.get("focus")))
             brief = _scrub(brief) if _PRO_ONLY_RE.search(brief or "") else brief
             composed = True
         except Exception as e:
@@ -495,6 +535,8 @@ def invoke(tool, args, ctx):
                 "coins": rows,
                 "news": news,
                 "meta": meta,
+                "sources": SOURCES,
+                "prefs": {"style": args.get("style") or "short", "focus": args.get("focus") or "balanced"},
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
                 "upgrade": "Want this in Claude/Cursor via MCP? https://realcryptocap.com/mcp",
@@ -521,7 +563,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.5"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.6"},
                             "capabilities": {"sampling": {}},
                         },
                     }

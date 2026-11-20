@@ -12,3 +12,4 @@ dist/
 .anna-app/
 executas/*/dist/
 .anna/
+.tmpshot/

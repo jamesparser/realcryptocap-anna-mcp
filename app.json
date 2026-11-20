@@ -1,8 +1,8 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.5",
-  "tagline": "AI crypto market briefs on real market cap data, stablecoins excluded",
-  "description": "Generate a crypto market brief in one click. RealCryptoCap Market Brief pulls price, market cap, rank, 24h change and 24h range from RealCryptoCap's real market cap list (CoinGecko data cross-checked with CoinMarketCap and HTX; stablecoins, wrapped/staked receipts and tokenized assets excluded). Prices refresh every 1-2 minutes and every brief shows the exact 'data as of' time in UTC. The AI writes a short brief with a bias, key levels and what to watch. Key levels are the 24h low (support) and 24h high (resistance), stated with their basis, never invented targets. Recent headlines link to the original articles with their publication time. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
+  "version": "0.1.7",
+  "tagline": "Your crypto watchlist with AI briefs, history and live real market cap data",
+  "description": "Track the coins you care about with AI market briefs. Build a personal watchlist, set your briefing preferences (length and focus), and generate a brief from live RealCryptoCap data: price, market cap, rank, 24h change and 24h range. Every brief shows the exact 'data as of' time, lists its data sources, uses the 24h low/high as key levels with that basis stated, and links each headline to the original article. Your watchlist, preferences and past briefs are saved to your Anna account, and each new brief shows how prices moved since your last one. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
   "category": "data"
 }

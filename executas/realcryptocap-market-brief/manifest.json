@@ -1,7 +1,7 @@
 {
   "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "icon": "\ud83d\udcc8",
   "category": "data",
   "homepage": "https://realcryptocap.com/mcp",
@@ -48,6 +48,18 @@
           "type": "string",
           "required": false,
           "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."
+        },
+        {
+          "name": "style",
+          "type": "string",
+          "required": false,
+          "description": "Brief length: 'short' (default, ~120 words) or 'detailed' (~220 words)."
+        },
+        {
+          "name": "focus",
+          "type": "string",
+          "required": false,
+          "description": "Emphasis: 'balanced' (default), 'levels' (price action and 24h range) or 'news' (headlines)."
         }
       ]
     }
