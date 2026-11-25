@@ -27,7 +27,7 @@ FREE_DAILY_BUDGET = 80
 MANIFEST = {
     "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "icon": "📈",
     "category": "data",
     "homepage": "https://realcryptocap.com/mcp",
@@ -62,6 +62,20 @@ MANIFEST = {
             "timeout": 90,
             "parameters": [
                 {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."}
+            ],
+        },
+        {
+            "name": "get_watchlist_updates",
+            "description": (
+                "What changed for the user's watchlist since their last visit: price now vs at last visit, "
+                "24h change, highlights (big moves, at 24h high/low) and the headlines mentioning each coin "
+                "published since then, each with source link and UTC timestamp. No AI call; fast."
+            ),
+            "timeout": 60,
+            "parameters": [
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids of the watchlist."},
+                {"name": "since", "type": "string", "required": False, "description": "Last visit time, ISO-8601 or epoch ms. Omit for the last 48h of news."},
+                {"name": "prev_prices", "type": "string", "required": False, "description": "JSON object of coin id -> price at last visit."},
             ],
         },
         {
@@ -292,12 +306,98 @@ def _news_headlines(limit=4):
                     "source": it.get("source"),
                     "date": it.get("date"),
                     "published_utc": _iso_utc(it.get("ts")),
+                    "ts": it.get("ts"),
+                    "summary": (it.get("description") or "")[:240],
                     "url": url if url.startswith("http") else None,
                 }
             )
         return out
     except Exception:
         return []
+
+
+def _parse_since(v):
+    """Accept epoch ms/seconds or ISO-8601; return epoch ms or None."""
+    if v in (None, ""):
+        return None
+    try:
+        f = float(v)
+        return int(f if f > 1e11 else f * 1000)
+    except (TypeError, ValueError):
+        pass
+    try:
+        import datetime as _dt
+        d = _dt.datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=_dt.timezone.utc)
+        return int(d.timestamp() * 1000)
+    except Exception:
+        return None
+
+
+def _mentions(item, coin):
+    text = " %s %s " % (item.get("title") or "", item.get("summary") or "")
+    name = (coin.get("name") or "").strip()
+    sym = (coin.get("symbol") or "").strip()
+    if name and re.search(r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(name), text, re.I):
+        return True
+    if sym and len(sym) >= 3 and re.search(r"(?<![A-Za-z$])\$?%s(?![A-Za-z])" % re.escape(sym), text):
+        return True
+    return False
+
+
+def _watchlist_updates(ids, since_ms, prev_prices):
+    rows = _cg_markets(ids)
+    meta = _data_meta(rows)
+    news = _news_headlines(60)
+    now_ms = int(time.time() * 1000)
+    coins = []
+    for r in rows:
+        if r.get("not_found"):
+            coins.append({"id": r["id"], "not_found": True})
+            continue
+        p0 = (prev_prices or {}).get(r["id"])
+        since_pct = ((r["price"] - p0) / p0 * 100.0) if (isinstance(p0, (int, float)) and p0 and r.get("price")) else None
+        related = [
+            {k: n.get(k) for k in ("title", "source", "published_utc", "url")}
+            for n in news
+            if _mentions(n, r) and (since_ms is None or (n.get("ts") or 0) > since_ms)
+        ][:4]
+        flags = []
+        if since_pct is not None and abs(since_pct) >= 3:
+            flags.append("moved %+.1f%% since your last visit" % since_pct)
+        ch = r.get("change_24h_pct")
+        if isinstance(ch, (int, float)) and abs(ch) >= 5:
+            flags.append("%+.1f%% in 24h" % ch)
+        lv = r.get("levels") or {}
+        if lv and r.get("price"):
+            if r["price"] <= lv["support"] * 1.005:
+                flags.append("trading at its 24h low")
+            elif r["price"] >= lv["resistance"] * 0.995:
+                flags.append("trading at its 24h high")
+        coins.append(
+            {
+                "id": r["id"], "name": r.get("name"), "symbol": r.get("symbol"), "rank": r.get("rank"),
+                "price": r.get("price"), "price_at_last_visit": p0, "change_since_last_visit_pct": since_pct,
+                "change_24h_pct": ch, "levels": r.get("levels"), "last_updated": r.get("last_updated"),
+                "highlights": flags, "news": related,
+            }
+        )
+    general = [
+        {k: n.get(k) for k in ("title", "source", "published_utc", "url")}
+        for n in news
+        if since_ms is None or (n.get("ts") or 0) > since_ms
+    ][:5]
+    score = lambda c: (len(c.get("highlights") or []) * 10 + len(c.get("news") or []) * 3 + abs(c.get("change_since_last_visit_pct") or 0))
+    coins.sort(key=score, reverse=True)
+    return {
+        "since_utc": _iso_utc(since_ms) if since_ms else None,
+        "now_utc": _iso_utc(now_ms),
+        "coins": coins,
+        "market_news_since": general,
+        "meta": meta,
+        "sources": SOURCES,
+    }
 
 
 # ---------------------------------------------------------------- sampling
@@ -485,6 +585,19 @@ def _footer(meta):
 
 
 def invoke(tool, args, ctx):
+    if tool == "get_watchlist_updates":
+        _charge_free_call()
+        ids = _parse_ids(args.get("coin_ids"), ("bitcoin", "ethereum"))
+        prev = args.get("prev_prices")
+        if isinstance(prev, str):
+            try:
+                prev = json.loads(prev)
+            except Exception:
+                prev = None
+        data = _watchlist_updates(ids, _parse_since(args.get("since")), prev if isinstance(prev, dict) else None)
+        data["provider"] = "realcryptocap.com"
+        return {"success": True, "data": data}
+
     if tool == "get_price":
         _charge_free_call()
         ids = _parse_ids(args.get("coin_ids"), ("bitcoin",))
@@ -563,7 +676,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.6"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.7"},
                             "capabilities": {"sampling": {}},
                         },
                     }

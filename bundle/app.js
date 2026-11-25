@@ -8,6 +8,8 @@ const WATCH_KEY = "rcc:watchlist";
 const PREFS_KEY = "rcc:prefs";
 const HIST_KEY = "rcc:history";
 const HIST_MAX = 20;
+const VISIT_KEY = "rcc:visit";
+let visit = null;
 const DEFAULT_WATCH = ["bitcoin", "ethereum", "solana", "dogecoin", "chainlink"];
 const SYMBOLS = { bitcoin: "BTC", ethereum: "ETH", solana: "SOL", dogecoin: "DOGE", chainlink: "LINK", ripple: "XRP", cardano: "ADA", binancecoin: "BNB", tron: "TRX", avalanche_2: "AVAX" };
 
@@ -125,6 +127,7 @@ function addCoins() {
   $("coin-input").value = "";
   renderChips();
   save(WATCH_KEY, watchlist);
+  loadUpdates(false);
 }
 
 function currentIds() {
@@ -317,6 +320,113 @@ async function generate() {
   }
 }
 
+function newsItem(n) {
+  const li = document.createElement("li");
+  if (n.url) {
+    const a = document.createElement("a");
+    a.href = n.url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = n.title || "";
+    li.appendChild(a);
+  } else {
+    li.textContent = n.title || "";
+  }
+  const s = document.createElement("span");
+  s.className = "src";
+  s.textContent = [n.source, n.published_utc ? fmtTime(n.published_utc) : null].filter(Boolean).join(" · ");
+  li.appendChild(s);
+  return li;
+}
+
+function renderUpdates(u) {
+  const since = u.since_utc;
+  $("upd-title").textContent = since ? "Since your last visit" : "What's new for your watchlist";
+  $("upd-asof").textContent =
+    (since ? "Changes since " + fmtTime(since) + " · " : "First visit: showing the last 48h of news · ") +
+    "prices as of " + (u.meta && u.meta.data_as_of_utc ? fmtTime(u.meta.data_as_of_utc) : "n/a") +
+    " · source: RealCryptoCap";
+  const box = $("upd-coins");
+  box.innerHTML = "";
+  (u.coins || []).forEach((c) => {
+    if (c.not_found) return;
+    const card = document.createElement("div");
+    card.className = "upd-card" + ((c.highlights || []).length ? " hot" : "");
+    const head = document.createElement("div");
+    head.className = "upd-head";
+    const nm = document.createElement("span");
+    nm.className = "name";
+    nm.textContent = (c.rank != null ? "#" + c.rank + " " : "") + (c.name || c.id) + " ";
+    const sym = document.createElement("span");
+    sym.className = "sym";
+    sym.textContent = c.symbol || "";
+    nm.appendChild(sym);
+    const px = document.createElement("span");
+    px.className = "upd-px";
+    let txt = fmtUsd(c.price);
+    if (c.change_since_last_visit_pct != null) {
+      txt += "  " + (c.change_since_last_visit_pct >= 0 ? "+" : "") + c.change_since_last_visit_pct.toFixed(2) + "% since last visit";
+      px.classList.add(c.change_since_last_visit_pct >= 0 ? "up" : "down");
+    } else {
+      const p = fmtPct(c.change_24h_pct);
+      txt += "  " + p.text + " 24h";
+      px.classList.add(p.cls);
+    }
+    px.textContent = txt;
+    head.appendChild(nm);
+    head.appendChild(px);
+    card.appendChild(head);
+    if ((c.highlights || []).length) {
+      const hl = document.createElement("div");
+      hl.className = "upd-hl";
+      hl.textContent = c.highlights.join(" · ");
+      card.appendChild(hl);
+    }
+    const ul = document.createElement("ul");
+    ul.className = "news";
+    (c.news || []).forEach((n) => ul.appendChild(newsItem(n)));
+    if (!(c.news || []).length) {
+      const li = document.createElement("li");
+      li.textContent = "No new headlines mentioning " + (c.symbol || c.name) + (since ? " since your last visit." : " in the last 48h.");
+      ul.appendChild(li);
+    }
+    card.appendChild(ul);
+    box.appendChild(card);
+  });
+  const mk = $("upd-market");
+  mk.innerHTML = "";
+  (u.market_news_since || []).forEach((n) => mk.appendChild(newsItem(n)));
+  $("upd-market-h").hidden = !(u.market_news_since || []).length;
+}
+
+async function loadUpdates(markVisit) {
+  if (!anna || !watchlist.length) {
+    $("upd-asof").textContent = watchlist.length ? "" : "Add coins to your watchlist to see updates here.";
+    return;
+  }
+  $("upd-asof").textContent = "Checking what changed for your watchlist...";
+  try {
+    const out = await anna.tools.invoke({
+      tool_id: TOOL_ID,
+      method: "get_watchlist_updates",
+      args: {
+        coin_ids: watchlist.slice(0, 12).join(","),
+        since: visit && visit.at ? new Date(visit.at).toISOString() : "",
+        prev_prices: JSON.stringify((visit && visit.prices) || {}),
+      },
+    });
+    const payload = (out && out.data) || out || {};
+    const u = payload.coins === undefined && payload.data ? payload.data : payload;
+    renderUpdates(u);
+    if (markVisit) {
+      const prices = {};
+      (u.coins || []).forEach((c) => { if (c.id && c.price) prices[c.id] = c.price; });
+      visit = { at: Date.now(), prices };
+      save(VISIT_KEY, visit);
+    }
+  } catch (e) {
+    $("upd-asof").textContent = "Could not load updates: " + (e && e.message ? e.message : String(e));
+  }
+}
+
 async function main() {
   renderChips();
   try {
@@ -337,6 +447,8 @@ async function main() {
   if (Array.isArray(w)) watchlist = w;
   const p = await load(PREFS_KEY);
   if (p && typeof p === "object") prefs = { ...prefs, ...p };
+  const v = await load(VISIT_KEY);
+  if (v && typeof v === "object") visit = v;
   const hist = await load(HIST_KEY);
   if (Array.isArray(hist)) history = hist;
   selected = new Set(watchlist.slice(0, 3));
@@ -352,6 +464,8 @@ async function main() {
   $("add-coin").addEventListener("click", addCoins);
   $("coin-input").addEventListener("keydown", (e) => { if (e.key === "Enter") addCoins(); });
   $("generate").addEventListener("click", generate);
+  $("upd-refresh").addEventListener("click", () => loadUpdates(false));
+  loadUpdates(true);
   $("clear-history").addEventListener("click", async () => { history = []; await save(HIST_KEY, history); renderHistory(); });
 }
 

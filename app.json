@@ -1,8 +1,8 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.7",
-  "tagline": "Your crypto watchlist with AI briefs, history and live real market cap data",
-  "description": "Track the coins you care about with AI market briefs. Build a personal watchlist, set your briefing preferences (length and focus), and generate a brief from live RealCryptoCap data: price, market cap, rank, 24h change and 24h range. Every brief shows the exact 'data as of' time, lists its data sources, uses the 24h low/high as key levels with that basis stated, and links each headline to the original article. Your watchlist, preferences and past briefs are saved to your Anna account, and each new brief shows how prices moved since your last one. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
+  "version": "0.1.8",
+  "tagline": "Open it and see what changed for your coins since your last visit",
+  "description": "Open the app and instantly see what changed for your watchlist since your last visit: each coin's price then vs now, highlights like big moves or a coin trading at its 24h high or low, and the headlines that mention it, each with a source link and UTC timestamp. Build your own watchlist, set briefing preferences (length and focus), and generate an AI market brief from live RealCryptoCap data (price, market cap, rank, 24h change and 24h range). Every brief shows its 'data as of' time and data sources, and past briefs are kept in History. Want this inside Claude, Cursor or your own agent? Get the RealCryptoCap MCP at realcryptocap.com/mcp.",
   "category": "data"
 }

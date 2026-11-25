@@ -1,7 +1,7 @@
 {
   "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "icon": "\ud83d\udcc8",
   "category": "data",
   "homepage": "https://realcryptocap.com/mcp",
@@ -35,6 +35,31 @@
           "type": "string",
           "required": false,
           "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
+        }
+      ]
+    },
+    {
+      "name": "get_watchlist_updates",
+      "description": "What changed for the user's watchlist since their last visit: price now vs at last visit, 24h change, highlights (big moves, at 24h high/low) and the headlines mentioning each coin published since then, each with source link and UTC timestamp. No AI call; fast.",
+      "timeout": 60,
+      "parameters": [
+        {
+          "name": "coin_ids",
+          "type": "string",
+          "required": false,
+          "description": "Comma separated CoinGecko ids of the watchlist."
+        },
+        {
+          "name": "since",
+          "type": "string",
+          "required": false,
+          "description": "Last visit time, ISO-8601 or epoch ms. Omit for the last 48h of news."
+        },
+        {
+          "name": "prev_prices",
+          "type": "string",
+          "required": false,
+          "description": "JSON object of coin id -> price at last visit."
         }
       ]
     },

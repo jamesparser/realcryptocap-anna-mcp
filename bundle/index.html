@@ -19,6 +19,16 @@
     </header>
 
     <main>
+      <section class="panel updates" id="updates" aria-label="Since your last visit">
+        <div class="brief-head">
+          <h2 id="upd-title">What's new for your watchlist</h2>
+          <button id="upd-refresh" class="ghost small" type="button">Refresh</button>
+        </div>
+        <p class="asof" id="upd-asof">Loading your watchlist updates...</p>
+        <div id="upd-coins"></div>
+        <h3 class="sect" id="upd-market-h" hidden>Other market headlines since then</h3>
+        <ul class="news" id="upd-market"></ul>
+      </section>
       <section class="panel controls" aria-label="Brief controls">
         <label class="lbl">My watchlist <span class="lbl-note">tap to include in the brief, × to remove</span></label>
         <div class="chips" id="chips"></div>
