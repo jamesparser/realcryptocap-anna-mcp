@@ -27,15 +27,15 @@ FREE_DAILY_BUDGET = 80
 MANIFEST = {
     "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "icon": "📈",
     "category": "data",
-    "homepage": "https://realcryptocap.com/mcp",
+    "homepage": "https://realcryptocap.com/api",
     "license": "MIT",
     "description": (
         "Real crypto market prices, 24h change, and AI-composed market briefs. "
         "Real market cap methodology excludes stablecoins, wrapped/staked receipts, "
-        "and tokenized assets. Free MCP for the Top 50 at realcryptocap.com/mcp."
+        "and tokenized assets. RealCryptoCap MCP for any agent: realcryptocap.com/api"
     ),
     "author": "Node0 Data Systems / RealCryptoCap <contact@realcryptocap.com>",
     "host_capabilities": ["llm.sample"],
@@ -120,7 +120,7 @@ def _charge_free_call():
         if _budget["used"] >= FREE_DAILY_BUDGET:
             raise RuntimeError(
                 "Free tier limit reached for today. Try again tomorrow, or use RealCryptoCap "
-                "directly: free MCP for the Top 50 at https://realcryptocap.com/mcp."
+                "directly in your own agent with the RealCryptoCap MCP: https://realcryptocap.com/api"
             )
         _budget["used"] += 1
 
@@ -610,7 +610,7 @@ def invoke(tool, args, ctx):
             composed = True
         except Exception as e:
             brief = _fallback_brief(rows) + "\n\n(AI composition was unavailable: %s)" % str(e)[:160]
-        brief = (brief or "").rstrip() + _footer(meta) + "\n\nUse RealCryptoCap in Claude or Cursor: free MCP for the Top 50 at https://realcryptocap.com/mcp"
+        brief = (brief or "").rstrip() + _footer(meta) + "\n\nAdd RealCryptoCap market data and prices to your agent: use the RealCryptoCap MCP: https://realcryptocap.com/api"
         return {
             "success": True,
             "data": {
@@ -623,7 +623,7 @@ def invoke(tool, args, ctx):
                 "prefs": {"style": args.get("style") or "short", "focus": args.get("focus") or "balanced"},
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
-                "upgrade": "Use RealCryptoCap in Claude or Cursor: free MCP for the Top 50, Pro for the full data. https://realcryptocap.com/mcp",
+                "upgrade": "Add RealCryptoCap market data and prices to your agent: use the RealCryptoCap MCP: https://realcryptocap.com/api",
             },
         }
 
@@ -647,7 +647,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.8"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.9"},
                             "capabilities": {"sampling": {}},
                         },
                     }

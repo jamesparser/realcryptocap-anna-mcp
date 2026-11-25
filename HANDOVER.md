@@ -3,7 +3,7 @@
 Updated 2026-11-10. Owner: Casey / Node0 Data Systems.
 
 ## Status
-- Anna app **@realcryptocap/realcryptocap-market-brief** (app_id 848) is **pending_review**, v0.1.9 pinned for review (resubmitted 2026-11-25: "Since your last visit" panel; simplified UI, no stale brief on open, source shown as RealCryptoCap (prices: HTX), free Top 50 MCP link). Anna sends no email; check with `anna-app apps status realcryptocap-market-brief`.
+- Anna app **@realcryptocap/realcryptocap-market-brief** (app_id 848) is **pending_review**, v0.1.10 pinned for review (resubmitted 2026-11-25: MCP line links to realcryptocap.com/api; "Since your last visit" panel; simplified UI, no stale brief on open, source shown as RealCryptoCap (prices: HTX), free Top 50 MCP link). Anna sends no email; check with `anna-app apps status realcryptocap-market-brief`.
 - Tested end to end inside Anna's cloud agent (linux-x86_64): live prices, rank, market cap, 24h change, AI brief via host sampling, headlines, MCP upsell.
 - Listing is complete: logo, 2 screenshots, homepage https://realcryptocap.com, support /support, privacy /legal. Category `data` (Anna has no finance category).
 - A reminder is scheduled for 2026-11-11 07:03 UTC to check the review status.
@@ -55,4 +55,4 @@ Updated 2026-11-10. Owner: Casey / Node0 Data Systems.
 ## Copy rules (from Casey)
 - Source is shown as "RealCryptoCap (prices: HTX)". Do not name other upstream providers in the app, listing or README.
 - No refresh-rate or news-feed details in the app; just the data timestamp and linked, timestamped headlines.
-- MCP link copy: free MCP for the Top 50, Pro for the full data.
+- MCP link copy: "Add RealCryptoCap market data and prices to your agent: use the RealCryptoCap MCP" -> https://realcryptocap.com/api. No tier or harness names.

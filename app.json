@@ -1,8 +1,8 @@
 {
   "slug": "realcryptocap-market-brief",
   "name": "RealCryptoCap Market Brief",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "tagline": "Open it and see what changed for your coins since your last visit",
-  "description": "Open the app and instantly see what changed for your watchlist since your last visit: each coin's price then vs now, highlights like big moves or a coin trading at its 24h high or low, and the headlines that mention it, each with a source link and UTC timestamp. Build your own watchlist, set briefing preferences (length and focus), and generate an AI market brief from live RealCryptoCap data (price, market cap, rank, 24h change and 24h range). Every brief shows its 'data as of' time and data sources, and past briefs are kept in History. Use RealCryptoCap in Claude or Cursor too: free MCP for the Top 50 at realcryptocap.com/mcp.",
+  "description": "Open the app and instantly see what changed for your watchlist since your last visit: each coin's price then vs now, highlights like big moves or a coin trading at its 24h high or low, and the headlines that mention it, each with a source link and UTC timestamp. Build your own watchlist, set briefing preferences (length and focus), and generate an AI market brief from live RealCryptoCap data (price, market cap, rank, 24h change and 24h range). Every brief shows its 'data as of' time and data sources, and past briefs are kept in History. Add RealCryptoCap market data and prices to your own agent with the RealCryptoCap MCP: realcryptocap.com/api.",
   "category": "data"
 }

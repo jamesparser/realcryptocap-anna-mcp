@@ -1,12 +1,12 @@
 {
   "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "icon": "\ud83d\udcc8",
   "category": "data",
-  "homepage": "https://realcryptocap.com/mcp",
+  "homepage": "https://realcryptocap.com/api",
   "license": "MIT",
-  "description": "Real crypto market prices, 24h change, and AI-composed market briefs. Real market cap methodology excludes stablecoins, wrapped/staked receipts, and tokenized assets. Free MCP for the Top 50 at realcryptocap.com/mcp.",
+  "description": "Real crypto market prices, 24h change, and AI-composed market briefs. Real market cap methodology excludes stablecoins, wrapped/staked receipts, and tokenized assets. RealCryptoCap MCP for any agent: realcryptocap.com/api",
   "author": "Node0 Data Systems / RealCryptoCap <contact@realcryptocap.com>",
   "host_capabilities": [
     "llm.sample"
