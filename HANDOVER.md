@@ -3,7 +3,7 @@
 Updated 2026-11-10. Owner: Casey / Node0 Data Systems.
 
 ## Status
-- Anna app **@realcryptocap/realcryptocap-market-brief** (app_id 848) is **pending_review**, v0.1.8 pinned for review (resubmitted 2026-11-25 after round 3: "Since your last visit" watchlist updates panel). Anna sends no email; check with `anna-app apps status realcryptocap-market-brief`.
+- Anna app **@realcryptocap/realcryptocap-market-brief** (app_id 848) is **pending_review**, v0.1.9 pinned for review (resubmitted 2026-11-25: "Since your last visit" panel; simplified UI, no stale brief on open, source shown as RealCryptoCap (prices: HTX), free Top 50 MCP link). Anna sends no email; check with `anna-app apps status realcryptocap-market-brief`.
 - Tested end to end inside Anna's cloud agent (linux-x86_64): live prices, rank, market cap, 24h change, AI brief via host sampling, headlines, MCP upsell.
 - Listing is complete: logo, 2 screenshots, homepage https://realcryptocap.com, support /support, privacy /legal. Category `data` (Anna has no finance category).
 - A reminder is scheduled for 2026-11-11 07:03 UTC to check the review status.
@@ -51,3 +51,8 @@ Updated 2026-11-10. Owner: Casey / Node0 Data Systems.
 3. Submit the DoraHacks BUILD before Nov 30 15:59 UTC.
 4. If rejected: read the review notes, fix, and resubmit.
 5. Optional: push a public mirror. The jamesparser repo is empty because this Mac has no push access to it.
+
+## Copy rules (from Casey)
+- Source is shown as "RealCryptoCap (prices: HTX)". Do not name other upstream providers in the app, listing or README.
+- No refresh-rate or news-feed details in the app; just the data timestamp and linked, timestamped headlines.
+- MCP link copy: free MCP for the Top 50, Pro for the full data.

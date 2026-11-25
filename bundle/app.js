@@ -192,37 +192,9 @@ function render(data) {
   const full = data.brief || "No brief produced.";
   $("brief-text").textContent = full.split("\n\nData: ")[0];
   $("asof").textContent = meta.data_as_of_utc
-    ? "Prices as of " + fmtTime(meta.data_as_of_utc) + " · refreshes every 1-2 min"
+    ? "Prices as of " + fmtTime(meta.data_as_of_utc) + " · RealCryptoCap (prices: HTX)"
     : "";
-  const method = $("method");
-  method.innerHTML = "";
-  [
-    ["Source", meta.source],
-    ["Data as of", meta.data_as_of_utc ? fmtTime(meta.data_as_of_utc) : null],
-    ["Fetched", meta.fetched_at_utc ? fmtTime(meta.fetched_at_utc) : null],
-    ["Refresh", meta.refresh],
-    ["Key levels", meta.levels_basis],
-    ["Note", "AI-written summary of the data above. Not investment advice."],
-  ].forEach(([k, v]) => {
-    if (!v) return;
-    const li = document.createElement("li");
-    const b = document.createElement("b");
-    b.textContent = k + ": ";
-    li.appendChild(b);
-    li.appendChild(document.createTextNode(v));
-    method.appendChild(li);
-  });
 
-  const srcList = $("sources");
-  srcList.innerHTML = "";
-  (data.sources || []).forEach((src) => {
-    const li = document.createElement("li");
-    const b = document.createElement("b");
-    b.textContent = src.name + ": ";
-    li.appendChild(b);
-    li.appendChild(document.createTextNode([src.url, src.access, src.upstream, src.refresh, src.fetched].filter(Boolean).join(" ")));
-    srcList.appendChild(li);
-  });
 
   const prev = previousSnapshot(data);
   const rows = $("price-rows");
@@ -272,6 +244,7 @@ function render(data) {
     if (n.source || n.date) {
       const s = document.createElement("span");
       s.className = "src";
+      li.appendChild(document.createTextNode(" "));
       s.textContent = [n.source, n.published_utc ? fmtTime(n.published_utc) : n.date].filter(Boolean).join(" · ");
       li.appendChild(s);
     }
@@ -332,6 +305,7 @@ function newsItem(n) {
   }
   const s = document.createElement("span");
   s.className = "src";
+  li.appendChild(document.createTextNode(" "));
   s.textContent = [n.source, n.published_utc ? fmtTime(n.published_utc) : null].filter(Boolean).join(" · ");
   li.appendChild(s);
   return li;
@@ -343,7 +317,7 @@ function renderUpdates(u) {
   $("upd-asof").textContent =
     (since ? "Changes since " + fmtTime(since) + " · " : "First visit: showing the last 48h of news · ") +
     "prices as of " + (u.meta && u.meta.data_as_of_utc ? fmtTime(u.meta.data_as_of_utc) : "n/a") +
-    " · source: RealCryptoCap";
+    " · RealCryptoCap (prices: HTX)";
   const box = $("upd-coins");
   box.innerHTML = "";
   (u.coins || []).forEach((c) => {
@@ -457,7 +431,6 @@ async function main() {
   $("pref-focus").value = prefs.focus;
   renderChips();
   renderHistory();
-  if (history[0] && history[0].data) render(history[0].data);
 
   $("pref-style").addEventListener("change", (e) => { prefs.style = e.target.value; save(PREFS_KEY, prefs); });
   $("pref-focus").addEventListener("change", (e) => { prefs.focus = e.target.value; save(PREFS_KEY, prefs); });

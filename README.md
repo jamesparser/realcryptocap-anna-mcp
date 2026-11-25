@@ -22,7 +22,7 @@ This Anna app includes a **limited free tier** so anyone can run a brief.
 
 The full RealCryptoCap product line is paid.
 
-- **API/CLI/MCP: Pro/Ultra only ($25/mo or $59/mo). API key required. Not free.**
+- **MCP:** free MCP for the Top 50; Pro ($25/mo) and Ultra ($59/mo) unlock the full API, CLI and MCP data.
 - Pro: $25/mo or $250/yr. Ultra: $59/mo or $588/yr.
 - Full product: real crypto market cap, native Top 500, coin lookup, market briefs, signals, derivatives and more.
 
@@ -84,7 +84,7 @@ echo '{"jsonrpc":"2.0","method":"invoke","id":2,"params":{"tool":"get_price","ar
 
 - RealCryptoCap: [realcryptocap.com](https://realcryptocap.com)
 - Paid API, CLI and MCP: [realcryptocap.com/api](https://realcryptocap.com/api)
-- Full MCP server (Pro/Ultra): `realcryptocap-mcp`
+- RealCryptoCap MCP (free Top 50, Pro for full data): `realcryptocap-mcp`
 - Anna developer docs: [anna.partners/developers](https://anna.partners/developers)
 
 ## License

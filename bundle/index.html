@@ -33,7 +33,7 @@
         <label class="lbl">My watchlist <span class="lbl-note">tap to include in the brief, × to remove</span></label>
         <div class="chips" id="chips"></div>
         <div class="addrow">
-          <input id="coin-input" class="input" type="text" placeholder="Add a coin: CoinGecko id, e.g. cardano" autocomplete="off" spellcheck="false" />
+          <input id="coin-input" class="input" type="text" placeholder="Add a coin: name or ticker, e.g. cardano or ADA" autocomplete="off" spellcheck="false" />
           <button id="add-coin" class="ghost" type="button">Add</button>
         </div>
         <div class="prefs">
@@ -67,16 +67,11 @@
         <h3 class="sect">Headlines</h3>
         <ul class="news" id="news"></ul>
 
-        <h3 class="sect">Data sources</h3>
-        <ul class="method" id="sources"></ul>
 
-        <h3 class="sect">Data &amp; method</h3>
-        <ul class="method" id="method"></ul>
 
         <p class="foot">
-          Want this in Claude, Cursor or your own agent?
-          <a href="https://realcryptocap.com/mcp" target="_blank" rel="noopener">Get the RealCryptoCap MCP</a>:
-          native Top 500, real market cap, signals and derivatives data. Pro/Ultra, API key required.
+          Use RealCryptoCap in Claude, Cursor or your own agent:
+          <a href="https://realcryptocap.com/mcp" target="_blank" rel="noopener">free MCP for the Top 50</a>, Pro for the full data.
         </p>
       </section>
 
@@ -87,7 +82,7 @@
       </section>
 
       <section class="panel empty" id="empty">
-        <p>Build your watchlist, set your briefing preferences, then generate a brief. Briefs are saved to History so you can follow your coins over time. Prices come from RealCryptoCap live data. Each brief shows the data timestamp, uses the 24h low/high as key levels and links every headline to its source.</p>
+        <p>Add coins to your watchlist, then generate an AI brief. Past briefs are saved in History.</p>
       </section>
     </main>
   </body>

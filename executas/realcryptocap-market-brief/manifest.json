@@ -1,12 +1,12 @@
 {
   "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
   "display_name": "RealCryptoCap Market Brief",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "icon": "\ud83d\udcc8",
   "category": "data",
   "homepage": "https://realcryptocap.com/mcp",
   "license": "MIT",
-  "description": "Real crypto market prices, 24h change, and AI-composed market briefs. Real market cap methodology excludes stablecoins, wrapped/staked receipts, and tokenized assets. Full RealCryptoCap API/CLI/MCP is Pro/Ultra only.",
+  "description": "Real crypto market prices, 24h change, and AI-composed market briefs. Real market cap methodology excludes stablecoins, wrapped/staked receipts, and tokenized assets. Free MCP for the Top 50 at realcryptocap.com/mcp.",
   "author": "Node0 Data Systems / RealCryptoCap <contact@realcryptocap.com>",
   "host_capabilities": [
     "llm.sample"
@@ -14,14 +14,14 @@
   "tools": [
     {
       "name": "get_price",
-      "description": "Get current USD price, market cap, and rank for one or more native cryptocurrencies. Stablecoins, wrapped/staked receipts and tokenized assets are excluded by the RealCryptoCap filter. Pass CoinGecko ids such as bitcoin, ethereum, solana.",
+      "description": "Get current USD price, market cap, and rank for one or more native cryptocurrencies. Stablecoins, wrapped/staked receipts and tokenized assets are excluded by the RealCryptoCap filter. Pass coin names, ids or tickers such as bitcoin, eth, solana.",
       "timeout": 90,
       "parameters": [
         {
           "name": "coin_ids",
           "type": "string",
           "required": false,
-          "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
+          "description": "Comma separated coins (name, id or ticker), e.g. 'bitcoin,ethereum' or 'btc,eth'. Default 'bitcoin'."
         }
       ]
     },
@@ -34,7 +34,7 @@
           "name": "coin_ids",
           "type": "string",
           "required": false,
-          "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."
+          "description": "Comma separated coins (name, id or ticker), e.g. 'bitcoin,ethereum' or 'btc,eth'. Default 'bitcoin'."
         }
       ]
     },
@@ -47,7 +47,7 @@
           "name": "coin_ids",
           "type": "string",
           "required": false,
-          "description": "Comma separated CoinGecko ids of the watchlist."
+          "description": "Comma separated coins of the watchlist (name, id or ticker)."
         },
         {
           "name": "since",
@@ -72,7 +72,7 @@
           "name": "coin_ids",
           "type": "string",
           "required": false,
-          "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."
+          "description": "Comma separated coins to focus on (name, id or ticker). Default 'bitcoin,ethereum'."
         },
         {
           "name": "style",

@@ -27,7 +27,7 @@ FREE_DAILY_BUDGET = 80
 MANIFEST = {
     "name": "tool-jasonparser-realcryptocap-market-brief-srwkkp4n",
     "display_name": "RealCryptoCap Market Brief",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "icon": "📈",
     "category": "data",
     "homepage": "https://realcryptocap.com/mcp",
@@ -35,7 +35,7 @@ MANIFEST = {
     "description": (
         "Real crypto market prices, 24h change, and AI-composed market briefs. "
         "Real market cap methodology excludes stablecoins, wrapped/staked receipts, "
-        "and tokenized assets. Full RealCryptoCap API/CLI/MCP is Pro/Ultra only."
+        "and tokenized assets. Free MCP for the Top 50 at realcryptocap.com/mcp."
     ),
     "author": "Node0 Data Systems / RealCryptoCap <contact@realcryptocap.com>",
     "host_capabilities": ["llm.sample"],
@@ -45,12 +45,12 @@ MANIFEST = {
             "description": (
                 "Get current USD price, market cap, and rank for one or more native "
                 "cryptocurrencies. Stablecoins, wrapped/staked receipts and tokenized "
-                "assets are excluded by the RealCryptoCap filter. Pass CoinGecko ids "
-                "such as bitcoin, ethereum, solana."
+                "assets are excluded by the RealCryptoCap filter. Pass coin names, ids "
+                "or tickers such as bitcoin, eth, solana."
             ),
             "timeout": 90,
             "parameters": [
-                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."}
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated coins (name, id or ticker), e.g. 'bitcoin,ethereum' or 'btc,eth'. Default 'bitcoin'."}
             ],
         },
         {
@@ -61,7 +61,7 @@ MANIFEST = {
             ),
             "timeout": 90,
             "parameters": [
-                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids, e.g. 'bitcoin,ethereum'. Default 'bitcoin'."}
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated coins (name, id or ticker), e.g. 'bitcoin,ethereum' or 'btc,eth'. Default 'bitcoin'."}
             ],
         },
         {
@@ -73,7 +73,7 @@ MANIFEST = {
             ),
             "timeout": 60,
             "parameters": [
-                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids of the watchlist."},
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated coins of the watchlist (name, id or ticker)."},
                 {"name": "since", "type": "string", "required": False, "description": "Last visit time, ISO-8601 or epoch ms. Omit for the last 48h of news."},
                 {"name": "prev_prices", "type": "string", "required": False, "description": "JSON object of coin id -> price at last visit."},
             ],
@@ -89,7 +89,7 @@ MANIFEST = {
             ),
             "timeout": 90,
             "parameters": [
-                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated CoinGecko ids to focus on. Default 'bitcoin,ethereum'."},
+                {"name": "coin_ids", "type": "string", "required": False, "description": "Comma separated coins to focus on (name, id or ticker). Default 'bitcoin,ethereum'."},
                 {"name": "style", "type": "string", "required": False, "description": "Brief length: 'short' (default, ~120 words) or 'detailed' (~220 words)."},
                 {"name": "focus", "type": "string", "required": False, "description": "Emphasis: 'balanced' (default), 'levels' (price action and 24h range) or 'news' (headlines)."},
             ],
@@ -119,9 +119,8 @@ def _charge_free_call():
             _budget["used"] = 0
         if _budget["used"] >= FREE_DAILY_BUDGET:
             raise RuntimeError(
-                "Free tier limit reached for today. "
-                "Get the RealCryptoCap MCP (Pro/Ultra) at https://realcryptocap.com/mcp "
-                "and set RCI_API_KEY for unlimited calls."
+                "Free tier limit reached for today. Try again tomorrow, or use RealCryptoCap "
+                "directly: free MCP for the Top 50 at https://realcryptocap.com/mcp."
             )
         _budget["used"] += 1
 
@@ -184,6 +183,10 @@ def _cg_markets(coin_ids):
         cid = (c.get("id") or "").lower()
         if cid:
             by_id[cid] = c
+    for c in coins or []:
+        for alias in ((c.get("symbol") or "").lower(), (c.get("name") or "").lower().replace(" ", "-")):
+            if alias and alias not in by_id:
+                by_id[alias] = c
     out = []
     for cid in wanted:
         c = by_id.get(cid)
@@ -214,40 +217,11 @@ def _cg_markets(coin_ids):
 _META = {}
 
 SOURCES = [
-    {
-        "name": "RealCryptoCap market data API",
-        "url": "https://realcryptocap.com/api/cg?topCoins=1",
-        "access": "Public, no API key or authorization needed by this app.",
-        "upstream": "RealCryptoCap server aggregates CoinGecko market data, cross-checked against CoinMarketCap and HTX prices (provider keys are held server-side by RealCryptoCap).",
-        "refresh": "Server cache refreshes every 1-2 minutes.",
-        "fetched": "Live at runtime on every brief request; nothing is bundled or pre-stored.",
-    },
-    {
-        "name": "RealCryptoCap news API",
-        "url": "https://realcryptocap.com/api/news",
-        "access": "Public, no API key or authorization needed by this app.",
-        "upstream": "Rolling cache of publisher RSS feeds (e.g. Cointelegraph, CoinDesk, Bitcoin Magazine) with Google News fallback; every headline keeps its original link and publication time.",
-        "refresh": "Feed cache refreshes about every 6 hours; headlines are kept for 48 hours.",
-        "fetched": "Live at runtime on every brief request.",
-    },
-    {
-        "name": "Anna host LLM (sampling)",
-        "url": "anna://sampling/createMessage",
-        "access": "Provided by Anna on the user's own credits; no third-party key.",
-        "upstream": "Writes the brief text from the data above only.",
-        "refresh": "Per request.",
-        "fetched": "At runtime.",
-    },
+    {"name": "RealCryptoCap", "url": "https://realcryptocap.com", "note": "Real market cap, rank and native-coin list (stablecoins, wrapped tokens and tokenized assets removed). Prices from HTX."},
+    {"name": "Headlines", "note": "Each headline links to the original article with its publication time."},
 ]
-REFRESH_NOTE = "Prices refresh every 1-2 minutes on realcryptocap.com."
-SOURCE_NOTE = (
-    "RealCryptoCap real market cap list (realcryptocap.com/api/cg): CoinGecko market data "
-    "with CoinMarketCap and HTX price cross-checks; stablecoins, wrapped/staked and tokenized assets excluded."
-)
-LEVELS_NOTE = (
-    "Key levels are not forecasts: support = 24h low, resistance = 24h high, taken from the "
-    "same RealCryptoCap data (hourly 7d sparkline used if the 24h range is missing)."
-)
+SOURCE_NOTE = "RealCryptoCap (prices: HTX)"
+LEVELS_NOTE = "Key levels = 24h low (support) and 24h high (resistance)."
 
 
 def _levels(c):
@@ -280,7 +254,6 @@ def _data_meta(rows):
         "data_as_of_utc": as_of,
         "fetched_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "source": SOURCE_NOTE,
-        "refresh": REFRESH_NOTE,
         "levels_basis": LEVELS_NOTE,
         "source_url": "https://realcryptocap.com",
     }
@@ -578,10 +551,8 @@ def _fallback_brief(rows):
 
 
 def _footer(meta):
-    return (
-        "\n\nData: %s Prices as of %s UTC. %s %s Not investment advice."
-        % (meta["source"], meta.get("data_as_of_utc") or "n/a", meta["refresh"], meta["levels_basis"])
-    )
+    return "\n\nData: prices as of %s UTC · %s. %s Not investment advice." % (
+        meta.get("data_as_of_utc") or "n/a", meta["source"], meta["levels_basis"])
 
 
 def invoke(tool, args, ctx):
@@ -639,7 +610,7 @@ def invoke(tool, args, ctx):
             composed = True
         except Exception as e:
             brief = _fallback_brief(rows) + "\n\n(AI composition was unavailable: %s)" % str(e)[:160]
-        brief = (brief or "").rstrip() + _footer(meta) + "\n\nWant this in Claude/Cursor via MCP? https://realcryptocap.com/mcp"
+        brief = (brief or "").rstrip() + _footer(meta) + "\n\nUse RealCryptoCap in Claude or Cursor: free MCP for the Top 50 at https://realcryptocap.com/mcp"
         return {
             "success": True,
             "data": {
@@ -652,7 +623,7 @@ def invoke(tool, args, ctx):
                 "prefs": {"style": args.get("style") or "short", "focus": args.get("focus") or "balanced"},
                 "provider": "realcryptocap.com",
                 "tier": "pro" if _api_key() else "free",
-                "upgrade": "Want this in Claude/Cursor via MCP? https://realcryptocap.com/mcp",
+                "upgrade": "Use RealCryptoCap in Claude or Cursor: free MCP for the Top 50, Pro for the full data. https://realcryptocap.com/mcp",
             },
         }
 
@@ -676,7 +647,7 @@ def main():
                         "id": req.get("id"),
                         "result": {
                             "protocolVersion": "2.0",
-                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.7"},
+                            "serverInfo": {"name": "realcryptocap-market-brief", "version": "0.1.8"},
                             "capabilities": {"sampling": {}},
                         },
                     }
